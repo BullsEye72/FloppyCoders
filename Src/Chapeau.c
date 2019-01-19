@@ -190,7 +190,7 @@ extern const void *              pSoundWav;
 void service_ChapeauUart_task(void  const * argument)
 {
     /* you can use this thread to handle UART communication */
-	AVS_TRACE_INFO("start Harry Potter Uart thread, are you talking to me ?");
+	AVS_TRACE_INFO("start Harry Potter UART thread, are you talking to me ?");
 
 	UART_HandleTypeDef UartHandle;
 	__IO ITStatus UartReady = RESET;
@@ -224,35 +224,29 @@ void service_ChapeauUart_task(void  const * argument)
 	    if(HAL_UART_DeInit(&UartHandle) != HAL_OK)
 	    {
 	      //Error_Handler();
+	    	AVS_TRACE_ERROR("DeInit_SUCCEDED !");
 	    }
 	    if(HAL_UART_Init(&UartHandle) != HAL_OK)
 	    {
 	      //Error_Handler();
+	    	AVS_TRACE_ERROR("Init_SUCCEDED !");
 	    }
 
 	    BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
-
-	    while(UserButtonStatus == 0)
-	     {
-	         /* Toggle LED1*/
-	         BSP_LED_Toggle(LED1);
-	         HAL_Delay(100);
-	     }
 
 	    BSP_LED_Off(LED1);
 
 	    if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, 50) != HAL_OK)
 	    {
 	      //Error_Handler();
+	    	AVS_TRACE_ERROR("HAL_UART_Receive_DMA_SUCCEDED !");
+
 	    }
 
 	    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, 50)!= HAL_OK)
 	    {
 	      //Error_Handler();
-	    }
-
-	    while (UartReady != SET)
-	    {
+	    	AVS_TRACE_ERROR("HAL_UART_Transmit_DMA_SUCCEDED !");
 	    }
 
 	    /* Reset transmission flag */
