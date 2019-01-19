@@ -197,7 +197,7 @@ void service_ChapeauUart_task(void  const * argument)
 	__IO uint32_t UserButtonStatus = 0;
 
 	uint8_t aTxBuffer[] = " ****UART_TwoBoards communication based on DMA****  ****UART_TwoBoards communication based on DMA****  ****UART_TwoBoards communication based on DMA**** ";
-	uint8_t aRxBuffer[50];
+	uint8_t aRxBuffer[100];
 
 	  HAL_Init();
 
@@ -224,12 +224,12 @@ void service_ChapeauUart_task(void  const * argument)
 	    if(HAL_UART_DeInit(&UartHandle) != HAL_OK)
 	    {
 	      //Error_Handler();
-	    	AVS_TRACE_ERROR("DeInit_SUCCEDED !");
+	    	AVS_TRACE_INFO("DeInit_SUCCEDED !");
 	    }
 	    if(HAL_UART_Init(&UartHandle) != HAL_OK)
 	    {
 	      //Error_Handler();
-	    	AVS_TRACE_ERROR("Init_SUCCEDED !");
+	    	AVS_TRACE_INFO("Init_SUCCEDED !");
 	    }
 
 	    BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
@@ -239,14 +239,14 @@ void service_ChapeauUart_task(void  const * argument)
 	    if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, 50) != HAL_OK)
 	    {
 	      //Error_Handler();
-	    	AVS_TRACE_ERROR("HAL_UART_Receive_DMA_SUCCEDED !");
+	    	AVS_TRACE_INFO("HAL_UART_Receive_DMA_SUCCEDED !");
 
 	    }
 
 	    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, 50)!= HAL_OK)
 	    {
 	      //Error_Handler();
-	    	AVS_TRACE_ERROR("HAL_UART_Transmit_DMA_SUCCEDED !");
+	    	AVS_TRACE_INFO("HAL_UART_Transmit_DMA_SUCCEDED !");
 	    }
 
 	    /* Reset transmission flag */
