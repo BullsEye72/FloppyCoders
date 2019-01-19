@@ -190,8 +190,73 @@ extern const void *              pSoundWav;
 void service_ChapeauUart_task(void  const * argument)
 {
     /* you can use this thread to handle UART communication */
-    
-    AVS_TRACE_INFO("start Harry Potter Uart thread, are you talking to me ?");
+	AVS_TRACE_INFO("start Harry Potter Uart thread, are you talking to me ?");
+
+	UART_HandleTypeDef UartHandle;
+	__IO ITStatus UartReady = RESET;
+	__IO uint32_t UserButtonStatus = 0;
+
+	uint8_t aTxBuffer[] = " ****UART_TwoBoards communication based on DMA****  ****UART_TwoBoards communication based on DMA****  ****UART_TwoBoards communication based on DMA**** ";
+	uint8_t aRxBuffer[50];
+
+	  HAL_Init();
+
+	  BSP_LED_Init(LED1);
+	  BSP_LED_Init(LED2);
+
+	  /*##-1- Configure the UART peripheral ######################################*/
+	    /* Put the USART peripheral in the Asynchronous mode (UART Mode) */
+	    /* UART configured as follows:
+	        - Word Length = 8 Bits
+	        - Stop Bit = One Stop bit
+	        - Parity = None
+	        - BaudRate = 9600 baud
+	        - Hardware flow control disabled (RTS and CTS signals) */
+	    UartHandle.Instance        = USART6;
+
+	    UartHandle.Init.BaudRate   = 9600;
+	    UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+	    UartHandle.Init.StopBits   = UART_STOPBITS_1;
+	    UartHandle.Init.Parity     = UART_PARITY_NONE;
+	    UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+	    UartHandle.Init.Mode       = UART_MODE_TX_RX;
+
+	    if(HAL_UART_DeInit(&UartHandle) != HAL_OK)
+	    {
+	      //Error_Handler();
+	    }
+	    if(HAL_UART_Init(&UartHandle) != HAL_OK)
+	    {
+	      //Error_Handler();
+	    }
+
+	    BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
+
+	    while(UserButtonStatus == 0)
+	     {
+	         /* Toggle LED1*/
+	         BSP_LED_Toggle(LED1);
+	         HAL_Delay(100);
+	     }
+
+	    BSP_LED_Off(LED1);
+
+	    if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, 50) != HAL_OK)
+	    {
+	      //Error_Handler();
+	    }
+
+	    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, 50)!= HAL_OK)
+	    {
+	      //Error_Handler();
+	    }
+
+	    while (UartReady != SET)
+	    {
+	    }
+
+	    /* Reset transmission flag */
+	    UartReady = RESET;
 
     /* init code */
     
