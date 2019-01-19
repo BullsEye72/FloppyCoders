@@ -330,9 +330,26 @@ void service_ChapeauLed_task(void  const * argument)
     SpiHandle.Init.CRCPolynomial     = 7;
     SpiHandle.Init.NSS               = SPI_NSS_SOFT;
 
+	#ifdef MASTER_BOARD
+	  SpiHandle.Init.Mode = SPI_MODE_MASTER;
+	#else
+	  SpiHandle.Init.Mode = SPI_MODE_SLAVE;
+
+	  /* Slave board must wait until Master Board is ready. This to guarantee the
+		 correctness of transmitted/received data */
+	  HAL_Delay(5);
+	#endif /* MASTER_BOARD */
+
+	  if(HAL_SPI_Init(&SpiHandle) != HAL_OK)
+	  {
+	    /* Initialization Error */
+	    Error_Handler();
+	  }
+
+
     /* Buffer used for transmission */
     /*uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";*/
-    uint8_t aTxBuffer[] = "0 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 0 FF FF 0 0 0 FF 0 0 0 FF FF FF FF FF FF FF FF";
+    uint8_t aTxBuffer[] = "0 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0  FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0  FF 0 FF 0 FF 0 0 0 FF FF FF FF";
 
     /* Buffer used for reception */
     uint8_t aRxBuffer[BUFFERSIZE];
@@ -387,7 +404,7 @@ static void Error_Handler(void)
   /* Configure LED1 which is shared with SPI2_SCK signal */
   BSP_LED_Init(LED1);
   BSP_LED_Off(LED1);
-  AVS_TRACE_ERROR("Erreur du LED");
+  AVS_TRACE_ERROR("Erreur Handler du LED");
   while(1)
   {
     /* Toggle LED1 for error */
