@@ -197,7 +197,7 @@ void service_ChapeauUart_task(void  const * argument)
 	__IO uint32_t UserButtonStatus = 0;
 
 	uint8_t aTxBuffer[] = "endoloris";
-	uint8_t aRxBuffer[] = "protego";
+	uint8_t aRxBuffer[50];
 
 	  HAL_Init();
 
@@ -244,9 +244,13 @@ void service_ChapeauUart_task(void  const * argument)
 	    	AVS_TRACE_ERROR("HAL_UART_Transmit_DMA_ERROR !");
 	    }
 
+	    BSP_LCD_DisplayStringAt(250, 230, (uint8_t *)aRxBuffer, LEFT_MODE);
+
 	    while (UartReady != SET)
 	    {
 	    }
+
+	    BSP_LCD_DisplayStringAt(250, 230, (uint8_t *)aRxBuffer, LEFT_MODE);
 
 	    UartReady = RESET;
     
