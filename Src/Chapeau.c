@@ -290,8 +290,20 @@ void service_ChapeauLed_task(void  const * argument)
 
     /* init code */
 
+    /* Set the SPI parameters */
+    SpiHandle.Instance               = SPI2;
+    SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+    SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
+    SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
+    SpiHandle.Init.CLKPolarity       = SPI_POLARITY_HIGH;
+    SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
+    SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+    SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLE;
+    SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
+    SpiHandle.Init.CRCPolynomial     = 7;
+    SpiHandle.Init.NSS               = SPI_NSS_SOFT;
+
     /* Buffer used for transmission */
-    
     /*uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";*/
     uint8_t aTxBuffer[] = "0 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 0 FF FF 0 0 0 FF 0 0 0 FF FF FF FF FF FF FF FF";
 
@@ -348,6 +360,7 @@ static void Error_Handler(void)
   /* Configure LED1 which is shared with SPI2_SCK signal */
   BSP_LED_Init(LED1);
   BSP_LED_Off(LED1);
+  AVS_TRACE_ERROR("Erreur du LED");
   while(1)
   {
     /* Toggle LED1 for error */
