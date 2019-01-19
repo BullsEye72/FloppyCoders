@@ -55,6 +55,12 @@ typedef struct point_t
 
 #define MAX_POINTS 200
 #define MAX_SERIES 20
+#define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
+#define BUFFERSIZE (COUNTOF(aTxBuffer) - 1)
+
+/* SPI handler declaration */
+SPI_HandleTypeDef SpiHandle;
+
 typedef struct series_t
 {
 	point points [MAX_POINTS];
@@ -66,6 +72,12 @@ typedef struct image_t
 	series point_series [MAX_SERIES];
 	uint16_t series_nb;
 }image;
+
+enum {
+	TRANSFER_WAIT,
+	TRANSFER_COMPLETE,
+	TRANSFER_ERROR
+};
 
 void resetTouchInfos(){
     maxX=0;
@@ -212,11 +224,86 @@ void service_ChapeauLed_task(void  const * argument)
     AVS_TRACE_INFO("start Harry Potter Led thread, and the light goes on");
 
     /* init code */
+
+    /* Buffer used for transmission */
     
+    /*uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";*/
+    uint8_t aTxBuffer[] = "0 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 0 FF FF 0 0 0 FF 0 0 0 FF FF FF FF FF FF FF FF";
+
+    /* Buffer used for reception */
+    uint8_t aRxBuffer[BUFFERSIZE];
+
+    /* transfer state */
+
+    __IO uint32_t wTransferState = TRANSFER_WAIT;
+
+
+    if(HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE) != HAL_OK)
+    {
+      /* Transfer error in transmission process */
+      Error_Handler();
+    }
+
+    /*##-3- Wait for the end of the transfer ###################################*/
+    /*  Before starting a new communication transfer, you must wait the callback call
+        to get the transfer complete confirmation or an error detection.
+        For simplicity reasons, this example is just waiting till the end of the
+        transfer, but application may perform other tasks while transfer operation
+        is ongoing. */
+    while (wTransferState == TRANSFER_WAIT)
+    {
+    }
+
+    switch(wTransferState)
+    {
+      case TRANSFER_COMPLETE :
+        /*##-4- Compare the sent and received buffers ##############################*/
+        if(Buffercmp((uint8_t*)aTxBuffer, (uint8_t*)aRxBuffer, BUFFERSIZE))
+        {
+          /* Processing Error */
+          Error_Handler();
+        }
+      break;
+      default :
+        Error_Handler();
+      break;
+    }
+
+
     while (1) {
         /* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
         osDelay(10);
     }
+}
+
+
+
+static void Error_Handler(void)
+{
+  /* Configure LED1 which is shared with SPI2_SCK signal */
+  BSP_LED_Init(LED1);
+  BSP_LED_Off(LED1);
+  while(1)
+  {
+    /* Toggle LED1 for error */
+    BSP_LED_Toggle(LED1);
+    HAL_Delay(1000);
+  }
+}
+
+static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
+{
+  while (BufferLength--)
+  {
+    if((*pBuffer1) != *pBuffer2)
+    {
+      return BufferLength;
+    }
+    pBuffer1++;
+    pBuffer2++;
+  }
+
+  return 0;
 }
 
 /**********************************************/
@@ -247,7 +334,7 @@ void redraw(){
 	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetBackColor(LCD_COLOR_FLOPPY);
 	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(210, 15, (uint8_t *)"Floppy Coders", RIGHT_MODE);
+	BSP_LCD_DisplayStringAt(260, 12, (uint8_t *)"Floppy Coders", CENTER_MODE);
 
 	// Display it
 	BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
@@ -276,6 +363,14 @@ void redraw(){
     BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
     BSP_LCD_SetFont(&Font24);
     BSP_LCD_DisplayStringAt(10, 230, (uint8_t *)"Send", LEFT_MODE);
+
+    // "LED" box
+	BSP_LCD_SetTextColor(LCD_COLOR_RED);
+	BSP_LCD_FillRect(0, 280, 200, 100);
+	BSP_LCD_SetBackColor(LCD_COLOR_RED);
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetFont(&Font24);
+	BSP_LCD_DisplayStringAt(10, 330, (uint8_t *)"MAGIE LED!", LEFT_MODE);
 
     // "Clear" box
     BSP_LCD_SetTextColor(LCD_COLOR_LIGHTBLUE);
@@ -412,6 +507,14 @@ void service_Chapeau_task(void  const * argument)
                        printplot(bitmap);
 
                        osDelay(100); // to avoid multiple detections
+                } else if ((x1 > 0) && ( x1 < 200) && (y1 > 280) && ( y1 < 380))
+                {
+                    AVS_TRACE_INFO("Touch detected : 'LED' button\n");
+
+                    AVS_Play_Sound(hInstance, AVS_PLAYSOUND_ACTIVE, (void *)(uint32_t)pSoundWav, 100);
+
+
+                    osDelay(100); // to avoid multiple detections
 
                 } else if ((x1 > 0) && ( x1 < 200) && (y1 > 380) && ( y1 < 480))
                 {
