@@ -232,13 +232,13 @@ void service_ChapeauUart_task(void  const * argument)
 	    	AVS_TRACE_ERROR("Init_ERROR !");
 	    }
 
-	    if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, strlen(aRxBuffer)) != HAL_OK)
+	    if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, 50) != HAL_OK)
 	    {
 	    	//Error_Handler();
 	    	AVS_TRACE_ERROR("HAL_UART_Receive_DMA_ERROR !");
 	    }
 
-	    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, strlen(aTxBuffer))!= HAL_OK)
+	    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, 50)!= HAL_OK)
 	    {
 	        //Error_Handler();
 	    	AVS_TRACE_ERROR("HAL_UART_Transmit_DMA_ERROR !");
