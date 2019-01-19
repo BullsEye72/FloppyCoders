@@ -196,8 +196,8 @@ void service_ChapeauUart_task(void  const * argument)
 	__IO ITStatus UartReady = RESET;
 	__IO uint32_t UserButtonStatus = 0;
 
-	uint8_t aTxBuffer[] = " ****UART_TwoBoards communication based on DMA****  ****UART_TwoBoards communication based on DMA****  ****UART_TwoBoards communication based on DMA**** ";
-	uint8_t aRxBuffer[100];
+	uint8_t aTxBuffer[] = "endoloris";
+	uint8_t aRxBuffer[] = "protego";
 
 	  HAL_Init();
 
@@ -223,69 +223,32 @@ void service_ChapeauUart_task(void  const * argument)
 
 	    if(HAL_UART_DeInit(&UartHandle) != HAL_OK)
 	    {
-	      //Error_Handler();
-	    	AVS_TRACE_INFO("DeInit_SUCCEDED !");
+	    	//Error_Handler();
+	    	AVS_TRACE_ERROR("DeInit_ERROR !");
 	    }
 	    if(HAL_UART_Init(&UartHandle) != HAL_OK)
 	    {
-	      //Error_Handler();
-	    	AVS_TRACE_INFO("Init_SUCCEDED !");
+	    	//Error_Handler();
+	    	AVS_TRACE_ERROR("Init_ERROR !");
 	    }
 
-#ifdef TRANSMITTER_BOARD
-
-	    BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
-
-	    BSP_LED_Off(LED1);
-
-	    if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, 100) != HAL_OK)
+	    if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, strlen(aRxBuffer)) != HAL_OK)
 	    {
-	      //Error_Handler();
-	    	AVS_TRACE_INFO("HAL_UART_Receive_DMA_SUCCEDED !");
+	    	//Error_Handler();
+	    	AVS_TRACE_ERROR("HAL_UART_Receive_DMA_ERROR !");
 	    }
 
-	    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, 100)!= HAL_OK)
+	    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, strlen(aTxBuffer))!= HAL_OK)
 	    {
-	      //Error_Handler();
-	    	AVS_TRACE_INFO("HAL_UART_Transmit_DMA_SUCCEDED !");
+	        //Error_Handler();
+	    	AVS_TRACE_ERROR("HAL_UART_Transmit_DMA_ERROR !");
 	    }
 
-	    /* Reset transmission flag */
+	    while (UartReady != SET)
+	    {
+	    }
+
 	    UartReady = RESET;
-
-#else
-	    /* The board receives the message and sends it back */
-
-	      if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, 100) != HAL_OK)
-	      {
-	        //Error_Handler();
-	    	  AVS_TRACE_INFO("HAL_UART_Receive_DMA_SUCCEDED !");
-	      }
-
-	      /*while (UartReady != SET)
-	      {
-	          BSP_LED_On(LED1);
-	          HAL_Delay(100);
-	          BSP_LED_Off(LED1);
-	          HAL_Delay(100);
-	          BSP_LED_On(LED1);
-	          HAL_Delay(100);
-	          BSP_LED_Off(LED1);
-	          HAL_Delay(500);
-	      }*/
-
-	      /* Reset transmission flag */
-	      UartReady = RESET;
-	      BSP_LED_Off(LED1);
-
-
-	      if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, 100)!= HAL_OK)
-	      {
-	        //Error_Handler();
-	    	  AVS_TRACE_INFO("HAL_UART_Transmit_DMA_SUCCEDED !");
-	      }
-
-#endif /* TRANSMITTER_BOARD */
     
     while (1) {
         /* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
@@ -569,8 +532,3 @@ void service_Chapeau_task(void  const * argument)
     free(bitmap);
     free(bitmap_rotated);
 }
-
-
-
-
-
