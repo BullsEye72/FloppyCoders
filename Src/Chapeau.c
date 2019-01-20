@@ -155,7 +155,7 @@ void rotate_bitmap(char **bitmap28x28, char *bitmap28x28_rotated)
 {
 	int Width_Rescaled=28, Height_Rescaled=28;
 
-	/* rotate image 90°, compensate LCD rotation => input for AI algo */
+	/* rotate image 90Â°, compensate LCD rotation => input for AI algo */
 	for (int x=0; x<Width_Rescaled; x++) {
 		for (int y=0; y<Height_Rescaled; y++) {
 			bitmap28x28_rotated[y*Width_Rescaled + x] = bitmap28x28[x][y];
@@ -287,8 +287,6 @@ void initUART_Prepare_Rx(void)
 		AVS_TRACE_ERROR("HAL_UART_Receive_IT failed");
 	}
 
-	AVS_TRACE_INFO("HAL_UART_Receive_DEBUG");
-
 }
 
 void SendMsgOnUART(const uint8_t * msg)
@@ -324,7 +322,61 @@ void service_ChapeauUart_task(void  const * argument)
 			for(int i=0; i<RXBUFFERSIZE; i++)
 				if (aRxBuffer[i] == MSG_END_CHAR)
 					aRxBuffer[i] = 0;
-			AVS_TRACE_INFO("     =>'%s'", aRxBuffer); //TODO
+			AVS_TRACE_INFO("     =>'%s'", aRxBuffer);
+			
+			switch(aRxBuffer)
+			{
+				case "stupefix":
+				SendMsgOnUART((uint8_t *) "enervatum");
+				break;
+				
+				case "expelliarmus":
+				SendMsgOnUART((uint8_t *) "accio");
+				break;
+				
+				case "amplificatum":
+				SendMsgOnUART((uint8_t *) "reducto");
+				break;
+				
+				case "collaporta":
+				SendMsgOnUART((uint8_t *) "alohomora");
+				break;
+				
+				case "nox":
+				SendMsgOnUART((uint8_t *) "lumos");
+				break;
+				
+				case "rictusempra":
+				SendMsgOnUART((uint8_t *) "protego");
+				break;
+				
+				case "sectumsempra":
+				SendMsgOnUART((uint8_t *) "vulnera_sanetur");
+				break;
+				
+				case "epouvantard":
+				SendMsgOnUART((uint8_t *) "riddikulus");
+				break;
+				
+				case "arania":
+				SendMsgOnUART((uint8_t *) "arania_exumai");
+				break;
+				
+				case "mangemort":
+				SendMsgOnUART((uint8_t *) "expelliarmus");
+				break;
+				
+				case "detraqueur":
+				SendMsgOnUART((uint8_t *) "expecto_patronum");
+				break;
+				
+				case "avada_kedavra":
+				SendMsgOnUART((uint8_t *) "harry_potter");
+				break;
+
+				default:
+				break;				
+			}
 
 			// Display it
 			BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
@@ -358,15 +410,6 @@ enum {
 	TRANSFER_WAIT,
 	TRANSFER_COMPLETE,
 	TRANSFER_ERROR
-};
-
-enum {
-	RED,
-	GREEN,
-	BLUE,
-	YELLOW,
-	PINK,
-	WHITE
 };
 
 void service_ChapeauLed_task(void  const * argument)
@@ -404,9 +447,32 @@ void service_ChapeauLed_task(void  const * argument)
 	/* Buffer used for transmission */
 
 	//uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
-    int activeLed = 8;
-	uint8_t aTxBuffer[88] = {0};
-	getBuffer(aTxBuffer, activeLed);
+	uint8_t aTxBuffer[20];
+
+	aTxBuffer[0] = 0x00;
+	aTxBuffer[1] = 0x00;
+	aTxBuffer[2] = 0x00;
+	aTxBuffer[3] = 0x00;
+
+	aTxBuffer[4] = 0xFF;
+	aTxBuffer[5] = 0x00;
+	aTxBuffer[6] = 0x00;
+	aTxBuffer[7] = 0xFF;
+
+	aTxBuffer[8] = 0xEF;
+	aTxBuffer[9] = 0x00;
+	aTxBuffer[10] = 0xFF;
+	aTxBuffer[11] = 0x00;
+
+	aTxBuffer[12] = 0xFF;
+	aTxBuffer[13] = 0x00;
+	aTxBuffer[14] = 0xFF;
+	aTxBuffer[15] = 0x00;
+
+	aTxBuffer[16] = 0xFF;
+	aTxBuffer[17] = 0xFF;
+	aTxBuffer[18] = 0xFF;
+	aTxBuffer[19] = 0xFF;
 
 	/* transfer state */
 
@@ -439,7 +505,7 @@ void service_ChapeauLed_task(void  const * argument)
 	        For simplicity reasons, this example is just waiting till the end of the
 	        transfer, but application may perform other tasks while transfer operation
 	        is ongoing. */
-	/*while (wTransferState == TRANSFER_WAIT)
+	while (wTransferState == TRANSFER_WAIT)
 	{
 		osDelay(10);
 	}
@@ -447,119 +513,22 @@ void service_ChapeauLed_task(void  const * argument)
 	switch(wTransferState)
 	{
 	case TRANSFER_COMPLETE :
-		//##-4- Compare the sent and received buffers ##############################
+		/*##-4- Compare the sent and received buffers ##############################*/
 		AVS_TRACE_INFO("HAL_SPI_TRANSFER_COMPLETE !");
 		break;
 	default :
 		//Error_Handler();
 		AVS_TRACE_ERROR("HAL_SPI_DEFAULT_ERROR !");
 		break;
-	}*/
+	}
 
-	int waveDirection = 0; //0 - vers la gauche, 1 - vers la droite
-	int ledDelay = 50;
+	AVS_TRACE_INFO("ICI DU LED !");
 
 	while (1) {
 		/* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
 
-		if(waveDirection == 0){
-			for(int aL = 0 ; aL < 20 ; aL++){
-				if(aL > 10){
-					getBuffer(aTxBuffer, aL, YELLOW);
-				}
-				else{
-					getBuffer(aTxBuffer, aL, PINK);
-				}
-
-				HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
-				osDelay(ledDelay);
-			}
-
-			waveDirection = 1;
-		}
-		else{
-			for(int aL = 19 ; aL >= 0 ; aL--){
-				if(aL > 10){
-					getBuffer(aTxBuffer, aL, GREEN);
-				}
-				else{
-					getBuffer(aTxBuffer, aL, RED);
-				}
-				HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
-				osDelay(ledDelay);
-			}
-
-			waveDirection = 0;
-		}
-
-
+		osDelay(10);
 	}
-}
-
-void getBuffer(uint8_t *buf, int ledChoice, int colorChoice) {
-
-	//Start Bits
-	buf[0] = 0x00;
-	buf[1] = 0x00;
-	buf[2] = 0x00;
-	buf[3] = 0x00;
-
-	//LED Bits
-	for(uint8_t ledn = 0 ; ledn < 20 ; ledn ++){
-		int i = (ledn * 4) + 4;
-
-		if(ledn == ledChoice){
-			buf[i] = 0xEF;   //50% allumé
-		}
-		else{
-			buf[i] = 0xE0;   //0%
-		}
-
-		switch(colorChoice){
-		case 0: //RED
-			buf[i+1] = 0x00; //Blue
-			buf[i+2] = 0x00; //Green
-			buf[i+3] = 0xFF; //Red
-			break;
-		case 1: //GREEN
-			buf[i+1] = 0x00; //Blue
-			buf[i+2] = 0xFF; //Green
-			buf[i+3] = 0x00; //Red
-			break;
-		case 2: //BLUE
-			buf[i+1] = 0xFF; //Blue
-			buf[i+2] = 0x00; //Green
-			buf[i+3] = 0x00; //Red
-			break;
-		case 3: //YELLOW
-			buf[i+1] = 0xFF; //Blue
-			buf[i+2] = 0x00; //Green
-			buf[i+3] = 0xFF; //Red
-			break;
-		case 4: //PINK
-			buf[i+1] = 0xD7; //Blue
-			buf[i+2] = 0x9E; //Green
-			buf[i+3] = 0xF4; //Red
-			break;
-		case 5: //WHITE
-			buf[i+1] = 0xFF; //Blue
-			buf[i+2] = 0xFF; //Green
-			buf[i+3] = 0xFF; //Red
-			break;
-		default:
-			buf[i+1] = 0x00; //Blue
-			buf[i+2] = 0x00; //Green
-			buf[i+3] = 0x00; //Red
-			break;
-		}
-
-	}
-
-	//End Bits
-	buf[84] = 0xFF;
-	buf[85] = 0xFF;
-	buf[86] = 0xFF;
-	buf[87] = 0xFF;
 }
 
 static void Error_Handler(void)
@@ -673,14 +642,6 @@ void redraw(){
 	BSP_LCD_DrawLine(0, 280, 200, 280);
 	BSP_LCD_DrawLine(0, 380, 200, 380);
 
-	//DEMARRAGE MON TOURNOI DES SORCIERS
-	BSP_LCD_SetTextColor(LCD_COLOR_DARKGRAY);
-	BSP_LCD_FillRect(600, 80, 200, 100);
-	BSP_LCD_SetBackColor(LCD_COLOR_DARKGRAY);
-	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(600, 130, (uint8_t *)"Lancer TDS", LEFT_MODE);
-
 }
 
 
@@ -773,6 +734,10 @@ void service_Chapeau_task(void  const * argument)
 				{
 					AVS_TRACE_INFO("Touch detected : 'Send' button\n");
 
+					/* JUST FOR TEST !!!!!!!
+                                          TO MOVE IN YOUR CODE !!!!!!!!!!!!!!!
+					 */
+
 					/* Save only if point series is finishedn, users has released the touch
 					 * before pressing the Save area */
 					if (point_series_on_going == 1)
@@ -842,6 +807,7 @@ void service_Chapeau_task(void  const * argument)
 						default:
 							break;
 					}
+					
 
 					AVS_TRACE_INFO("%d",Symbole);
 
@@ -906,15 +872,6 @@ void service_Chapeau_task(void  const * argument)
 				//AVS_TRACE_INFO("min x=%d y=%d\n", minX, minY);
 				BSP_LCD_FillCircle(x1, y1, 10);
 
-			}else if ((x1 > 600) && ( x1 < 800) && (y1 > 80) && ( y1 < 480)){
-				//RIGHT PANEL
-				if ((x1 > 600) && ( x1 < 800) && (y1 > 80) && ( y1 < 180)){
-					// DEMARRE TDS
-					AVS_TRACE_INFO("Touch detected : 'DEMARRE TDS' button\n");
-
-					AVS_Play_Sound(hInstance, AVS_PLAYSOUND_PLAY, (void *)(uint32_t)pSoundWav, 100);
-					osDelay(100); // to avoid multiple detections
-				}
 			}
 			osDelay(10);
 		}else {
