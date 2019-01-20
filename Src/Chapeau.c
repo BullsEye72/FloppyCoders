@@ -393,32 +393,9 @@ void service_ChapeauLed_task(void  const * argument)
 	/* Buffer used for transmission */
 
 	//uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
-	uint8_t aTxBuffer[20];
-
-	aTxBuffer[0] = 0x00;
-	aTxBuffer[1] = 0x00;
-	aTxBuffer[2] = 0x00;
-	aTxBuffer[3] = 0x00;
-
-	aTxBuffer[4] = 0xFF;
-	aTxBuffer[5] = 0x00;
-	aTxBuffer[6] = 0x00;
-	aTxBuffer[7] = 0xFF;
-
-	aTxBuffer[8] = 0xEF;
-	aTxBuffer[9] = 0x00;
-	aTxBuffer[10] = 0xFF;
-	aTxBuffer[11] = 0x00;
-
-	aTxBuffer[12] = 0xFF;
-	aTxBuffer[13] = 0x00;
-	aTxBuffer[14] = 0xFF;
-	aTxBuffer[15] = 0x00;
-
-	aTxBuffer[16] = 0xFF;
-	aTxBuffer[17] = 0xFF;
-	aTxBuffer[18] = 0xFF;
-	aTxBuffer[19] = 0xFF;
+    int activeLed = 0;
+	uint8_t aTxBuffer[88] = {0};
+	getBuffer(aTxBuffer, activeLed);
 
 	/* transfer state */
 
@@ -475,6 +452,27 @@ void service_ChapeauLed_task(void  const * argument)
 
 		osDelay(10);
 	}
+}
+
+void getBuffer(uint8_t *buf, int count) {
+	buf[0] = 0x00;
+	buf[1] = 0x00;
+	buf[2] = 0x00;
+	buf[3] = 0x00;
+
+	for(uint8_t ledn = 0 ; ledn < 20 ; ledn ++){
+		int i = (ledn * 4) + 4;
+
+		buf[i] = 0xEF;   //Intensité
+		buf[i+1] = 0x00; //Blue
+		buf[i+2] = 0xFF; //Green
+		buf[i+3] = 0x00; //Red
+	}
+
+	buf[84] = 0xFF;
+	buf[85] = 0xFF;
+	buf[86] = 0xFF;
+	buf[87] = 0xFF;
 }
 
 static void Error_Handler(void)
@@ -596,7 +594,7 @@ void service_Chapeau_task(void  const * argument)
 	uint16_t x1, y1;
 	uint16_t compteur = 0;
 	uint8_t AVSrunning = 0;
-	int Symbole;
+	uint16_t Symbole;
 	image* imageNew;
 	uint16_t points_nb;
 	char **bitmap;
