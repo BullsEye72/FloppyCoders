@@ -287,6 +287,8 @@ void initUART_Prepare_Rx(void)
 		AVS_TRACE_ERROR("HAL_UART_Receive_IT failed");
 	}
 
+	AVS_TRACE_INFO("HAL_UART_Receive_DEBUG");
+
 }
 
 void SendMsgOnUART(const uint8_t * msg)
@@ -322,7 +324,7 @@ void service_ChapeauUart_task(void  const * argument)
 			for(int i=0; i<RXBUFFERSIZE; i++)
 				if (aRxBuffer[i] == MSG_END_CHAR)
 					aRxBuffer[i] = 0;
-			AVS_TRACE_INFO("     =>'%s'", aRxBuffer);
+			AVS_TRACE_INFO("     =>'%s'", aRxBuffer); //TODO
 
 			// Display it
 			BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
@@ -356,6 +358,15 @@ enum {
 	TRANSFER_WAIT,
 	TRANSFER_COMPLETE,
 	TRANSFER_ERROR
+};
+
+enum {
+	RED,
+	GREEN,
+	BLUE,
+	YELLOW,
+	PINK,
+	WHITE
 };
 
 void service_ChapeauLed_task(void  const * argument)
@@ -393,7 +404,7 @@ void service_ChapeauLed_task(void  const * argument)
 	/* Buffer used for transmission */
 
 	//uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
-    int activeLed = 0;
+    int activeLed = 8;
 	uint8_t aTxBuffer[88] = {0};
 	getBuffer(aTxBuffer, activeLed);
 
@@ -428,7 +439,7 @@ void service_ChapeauLed_task(void  const * argument)
 	        For simplicity reasons, this example is just waiting till the end of the
 	        transfer, but application may perform other tasks while transfer operation
 	        is ongoing. */
-	while (wTransferState == TRANSFER_WAIT)
+	/*while (wTransferState == TRANSFER_WAIT)
 	{
 		osDelay(10);
 	}
@@ -436,39 +447,115 @@ void service_ChapeauLed_task(void  const * argument)
 	switch(wTransferState)
 	{
 	case TRANSFER_COMPLETE :
-		/*##-4- Compare the sent and received buffers ##############################*/
+		//##-4- Compare the sent and received buffers ##############################
 		AVS_TRACE_INFO("HAL_SPI_TRANSFER_COMPLETE !");
 		break;
 	default :
 		//Error_Handler();
 		AVS_TRACE_ERROR("HAL_SPI_DEFAULT_ERROR !");
 		break;
-	}
+	}*/
 
-	AVS_TRACE_INFO("ICI DU LED !");
+	int waveDirection = 0; //0 - vers la gauche, 1 - vers la droite
+	int ledDelay = 50;
 
 	while (1) {
 		/* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
 
-		osDelay(10);
+		if(waveDirection == 0){
+			for(int aL = 0 ; aL < 20 ; aL++){
+				if(aL > 10){
+					getBuffer(aTxBuffer, aL, YELLOW);
+				}
+				else{
+					getBuffer(aTxBuffer, aL, PINK);
+				}
+
+				HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
+				osDelay(ledDelay);
+			}
+
+			waveDirection = 1;
+		}
+		else{
+			for(int aL = 19 ; aL >= 0 ; aL--){
+				if(aL > 10){
+					getBuffer(aTxBuffer, aL, GREEN);
+				}
+				else{
+					getBuffer(aTxBuffer, aL, RED);
+				}
+				HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
+				osDelay(ledDelay);
+			}
+
+			waveDirection = 0;
+		}
+
+
 	}
 }
 
-void getBuffer(uint8_t *buf, int count) {
+void getBuffer(uint8_t *buf, int ledChoice, int colorChoice) {
+
+	//Start Bits
 	buf[0] = 0x00;
 	buf[1] = 0x00;
 	buf[2] = 0x00;
 	buf[3] = 0x00;
 
+	//LED Bits
 	for(uint8_t ledn = 0 ; ledn < 20 ; ledn ++){
 		int i = (ledn * 4) + 4;
 
-		buf[i] = 0xEF;   //Intensité
-		buf[i+1] = 0x00; //Blue
-		buf[i+2] = 0xFF; //Green
-		buf[i+3] = 0x00; //Red
+		if(ledn == ledChoice){
+			buf[i] = 0xEF;   //50% allumé
+		}
+		else{
+			buf[i] = 0xE0;   //0%
+		}
+
+		switch(colorChoice){
+		case 0: //RED
+			buf[i+1] = 0x00; //Blue
+			buf[i+2] = 0x00; //Green
+			buf[i+3] = 0xFF; //Red
+			break;
+		case 1: //GREEN
+			buf[i+1] = 0x00; //Blue
+			buf[i+2] = 0xFF; //Green
+			buf[i+3] = 0x00; //Red
+			break;
+		case 2: //BLUE
+			buf[i+1] = 0xFF; //Blue
+			buf[i+2] = 0x00; //Green
+			buf[i+3] = 0x00; //Red
+			break;
+		case 3: //YELLOW
+			buf[i+1] = 0xFF; //Blue
+			buf[i+2] = 0x00; //Green
+			buf[i+3] = 0xFF; //Red
+			break;
+		case 4: //PINK
+			buf[i+1] = 0xD7; //Blue
+			buf[i+2] = 0x9E; //Green
+			buf[i+3] = 0xF4; //Red
+			break;
+		case 5: //WHITE
+			buf[i+1] = 0xFF; //Blue
+			buf[i+2] = 0xFF; //Green
+			buf[i+3] = 0xFF; //Red
+			break;
+		default:
+			buf[i+1] = 0x00; //Blue
+			buf[i+2] = 0x00; //Green
+			buf[i+3] = 0x00; //Red
+			break;
+		}
+
 	}
 
+	//End Bits
 	buf[84] = 0xFF;
 	buf[85] = 0xFF;
 	buf[86] = 0xFF;
@@ -677,10 +764,6 @@ void service_Chapeau_task(void  const * argument)
 				} else if ((x1 > 0) && ( x1 < 200) && (y1 > 180) && ( y1 < 280))
 				{
 					AVS_TRACE_INFO("Touch detected : 'Send' button\n");
-
-					/* JUST FOR TEST !!!!!!!
-                                          TO MOVE IN YOUR CODE !!!!!!!!!!!!!!!
-					 */
 
 					/* Save only if point series is finishedn, users has released the touch
 					 * before pressing the Save area */
