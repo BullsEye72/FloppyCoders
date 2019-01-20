@@ -324,7 +324,61 @@ void service_ChapeauUart_task(void  const * argument)
 			for(int i=0; i<RXBUFFERSIZE; i++)
 				if (aRxBuffer[i] == MSG_END_CHAR)
 					aRxBuffer[i] = 0;
-			AVS_TRACE_INFO("     =>'%s'", aRxBuffer); //TODO
+			AVS_TRACE_INFO("     =>'%s'", aRxBuffer);
+
+			switch(aRxBuffer)
+			{
+				case "stupefix":
+				SendMsgOnUART((uint8_t *) "enervatum");
+				break;
+
+				case "expelliarmus":
+				SendMsgOnUART((uint8_t *) "accio");
+				break;
+
+				case "amplificatum":
+				SendMsgOnUART((uint8_t *) "reducto");
+				break;
+
+				case "collaporta":
+				SendMsgOnUART((uint8_t *) "alohomora");
+				break;
+
+				case "nox":
+				SendMsgOnUART((uint8_t *) "lumos");
+				break;
+
+				case "rictusempra":
+				SendMsgOnUART((uint8_t *) "protego");
+				break;
+
+				case "sectumsempra":
+				SendMsgOnUART((uint8_t *) "vulnera_sanetur");
+				break;
+
+				case "epouvantard":
+				SendMsgOnUART((uint8_t *) "riddikulus");
+				break;
+
+				case "arania":
+				SendMsgOnUART((uint8_t *) "arania_exumai");
+				break;
+
+				case "mangemort":
+				SendMsgOnUART((uint8_t *) "expelliarmus");
+				break;
+
+				case "detraqueur":
+				SendMsgOnUART((uint8_t *) "expecto_patronum");
+				break;
+
+				case "avada_kedavra":
+				SendMsgOnUART((uint8_t *) "harry_potter");
+				break;
+
+				default:
+				break;
+			}
 
 			// Display it
 			BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
