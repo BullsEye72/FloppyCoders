@@ -462,34 +462,27 @@ void service_ChapeauLed_task(void  const * argument)
 	while (1) {
 		/* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
 
-		if(waveDirection == 0){
-			for(int aL = 0 ; aL < 20 ; aL++){
-				if(aL > 10){
-					getBuffer(aTxBuffer, aL, YELLOW);
+		for(int cl = 0; cl < 6; cl++){
+
+			if(waveDirection == 0){
+				for(int aL = 0 ; aL < 20 ; aL++){
+					getBuffer(aTxBuffer, aL, cl);
+
+					HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
+					osDelay(ledDelay);
 				}
-				else{
-					getBuffer(aTxBuffer, aL, PINK);
+				waveDirection = 1;
+			}
+			else{
+				for(int aL = 19 ; aL >= 0 ; aL--){
+					getBuffer(aTxBuffer, aL, cl);
+					HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
+					osDelay(ledDelay);
 				}
 
-				HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
-				osDelay(ledDelay);
+				waveDirection = 0;
 			}
 
-			waveDirection = 1;
-		}
-		else{
-			for(int aL = 19 ; aL >= 0 ; aL--){
-				if(aL > 10){
-					getBuffer(aTxBuffer, aL, GREEN);
-				}
-				else{
-					getBuffer(aTxBuffer, aL, RED);
-				}
-				HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
-				osDelay(ledDelay);
-			}
-
-			waveDirection = 0;
 		}
 
 
