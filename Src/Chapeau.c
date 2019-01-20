@@ -673,6 +673,14 @@ void redraw(){
 	BSP_LCD_DrawLine(0, 280, 200, 280);
 	BSP_LCD_DrawLine(0, 380, 200, 380);
 
+	//DEMARRAGE MON TOURNOI DES SORCIERS
+	BSP_LCD_SetTextColor(LCD_COLOR_DARKGRAY);
+	BSP_LCD_FillRect(600, 80, 200, 100);
+	BSP_LCD_SetBackColor(LCD_COLOR_DARKGRAY);
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetFont(&Font24);
+	BSP_LCD_DisplayStringAt(600, 130, (uint8_t *)"Lancer TDS", LEFT_MODE);
+
 }
 
 
@@ -681,7 +689,7 @@ void service_Chapeau_task(void  const * argument)
 	uint16_t x1, y1;
 	uint16_t compteur = 0;
 	uint8_t AVSrunning = 0;
-	uint16_t Symbole;
+	int Symbole;
 	image* imageNew;
 	uint16_t points_nb;
 	char **bitmap;
@@ -898,6 +906,15 @@ void service_Chapeau_task(void  const * argument)
 				//AVS_TRACE_INFO("min x=%d y=%d\n", minX, minY);
 				BSP_LCD_FillCircle(x1, y1, 10);
 
+			}else if ((x1 > 600) && ( x1 < 800) && (y1 > 80) && ( y1 < 480)){
+				//RIGHT PANEL
+				if ((x1 > 600) && ( x1 < 800) && (y1 > 80) && ( y1 < 180)){
+					// DEMARRE TDS
+					AVS_TRACE_INFO("Touch detected : 'DEMARRE TDS' button\n");
+
+					AVS_Play_Sound(hInstance, AVS_PLAYSOUND_PLAY, (void *)(uint32_t)pSoundWav, 100);
+					osDelay(100); // to avoid multiple detections
+				}
 			}
 			osDelay(10);
 		}else {
