@@ -326,7 +326,7 @@ void service_ChapeauUart_task(void  const * argument)
 					aRxBuffer[i] = 0;
 			AVS_TRACE_INFO("     =>'%s'", aRxBuffer);
 
-			switch(aRxBuffer)
+			switch((uint8_t*)aRxBuffer)
 			{
 				case "stupefix":
 				SendMsgOnUART((uint8_t *) "enervatum");
