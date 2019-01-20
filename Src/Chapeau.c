@@ -681,8 +681,6 @@ void service_Chapeau_task(void  const * argument)
 					/* JUST FOR TEST !!!!!!!
                                           TO MOVE IN YOUR CODE !!!!!!!!!!!!!!!
 					 */
-					SendMsgOnUART((uint8_t *)"collaporta");
-
 
 					/* Save only if point series is finishedn, users has released the touch
 					 * before pressing the Save area */
@@ -699,6 +697,60 @@ void service_Chapeau_task(void  const * argument)
 					memset(imageNew, 0, sizeof(image));
 
 					Symbole = ai_Predict(bitmap_rotated);
+
+					switch(Symbole)
+					{
+						case 0:
+							SendMsgOnUART((uint8_t *) "stupefix");
+							break;
+
+						case 1:
+							SendMsgOnUART((uint8_t *)"expelliarmus");
+							break;
+
+						case 2:
+							SendMsgOnUART((uint8_t *) "amplificatum");
+							break;
+
+						case 3:
+							SendMsgOnUART((uint8_t *) "collaporta");
+							break;
+
+						case 4:
+							SendMsgOnUART((uint8_t *) "nox");
+							break;
+
+						case 5:
+							SendMsgOnUART((uint8_t *) "rictusempra");
+							break;
+
+						case 6:
+							SendMsgOnUART((uint8_t *) "sectumsempra");
+							break;
+
+						case 7:
+							SendMsgOnUART((uint8_t *) "epouvantard");
+							break;
+
+						case 8:
+							SendMsgOnUART((uint8_t *) "arania");
+							break;
+
+						case 9:
+							SendMsgOnUART((uint8_t *) "mangemort");
+							break;
+
+						case 10:
+							SendMsgOnUART((uint8_t *) "detraqueur");
+							break;
+
+						case 11:
+							SendMsgOnUART((uint8_t *) "avada_kedavra");
+							break;
+
+						default:
+							break;
+					}
 
 					AVS_TRACE_INFO("%d",Symbole);
 
