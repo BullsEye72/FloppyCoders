@@ -1,45 +1,46 @@
 /**
-******************************************************************************
-* @file    Chapeau.c
-* @author  MCD Application Team
-* @version V1.0.0
-* @date    04-December-2018
-* @brief   Ademo file for 24h code 2019 contest
-******************************************************************************
-* @attention
-*
-* <h2><center>&copy; COPYRIGHT(c) 2018 STMicroelectronics</center></h2>
-*
-* Redistribution and use in source and binary forms, with or without modification,
-* are permitted provided that the following conditions are met:
-*   1. Redistributions of source code must retain the above copyright notice,
-*      this list of conditions and the following disclaimer.
-*   2. Redistributions in binary form must reproduce the above copyright notice,
-*      this list of conditions and the following disclaimer in the documentation
-*      and/or other materials provided with the distribution.
-*   3. Neither the name of STMicroelectronics nor the names of its contributors
-*      may be used to endorse or promote products derived from this software
-*      without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-* AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-* OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-* OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*
-******************************************************************************
-*/
+ ******************************************************************************
+ * @file    Chapeau.c
+ * @author  MCD Application Team
+ * @version V1.0.0
+ * @date    04-December-2018
+ * @brief   Ademo file for 24h code 2019 contest
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; COPYRIGHT(c) 2018 STMicroelectronics</center></h2>
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *   1. Redistributions of source code must retain the above copyright notice,
+ *      this list of conditions and the following disclaimer.
+ *   2. Redistributions in binary form must reproduce the above copyright notice,
+ *      this list of conditions and the following disclaimer in the documentation
+ *      and/or other materials provided with the distribution.
+ *   3. Neither the name of STMicroelectronics nor the names of its contributors
+ *      may be used to endorse or promote products derived from this software
+ *      without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ ******************************************************************************
+ */
 
 #include "service.h"
 #include "platform_init.h"
 #include "cmsis_os.h"
 #include "Chapeau.h"
 #include "stdlib.h"
+#include "stm32f7xx_hal_msp.h"
 
 #define NB_RETRY_RELEASE_DETECTION 10 /* 10 * 5ms = 50ms */
 
@@ -49,18 +50,12 @@ uint16_t maxX, minX, maxY, minY;
 
 typedef struct point_t
 {
-   uint16_t x;
-   uint16_t y;
+	uint16_t x;
+	uint16_t y;
 }point;
 
 #define MAX_POINTS 200
 #define MAX_SERIES 20
-#define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
-#define BUFFERSIZE (COUNTOF(aTxBuffer) - 1)
-
-/* SPI handler declaration */
-SPI_HandleTypeDef SpiHandle;
-
 typedef struct series_t
 {
 	point points [MAX_POINTS];
@@ -73,17 +68,11 @@ typedef struct image_t
 	uint16_t series_nb;
 }image;
 
-enum {
-	TRANSFER_WAIT,
-	TRANSFER_COMPLETE,
-	TRANSFER_ERROR
-};
-
 void resetTouchInfos(){
-    maxX=0;
-    maxY=0;
-    minY=480;
-    minX=800;
+	maxX=0;
+	maxY=0;
+	minY=480;
+	minX=800;
 }
 
 void drawline(int x0, int y0, int x1, int y1, int width, int height, char **imageWithLine)
@@ -128,38 +117,38 @@ void drawline(int x0, int y0, int x1, int y1, int width, int height, char **imag
 
 void create_bitmap(image *imageNew, char **bitmap28x28)
 {
-    float facteur = 20;
-    int Width, Height;
+	float facteur = 20;
+	int Width, Height;
 	int Width_Rescaled=28, Height_Rescaled=28;
 
-    Width = maxX - minX + 2;
-    Height = maxY - minY + 2;
+	Width = maxX - minX + 2;
+	Height = maxY - minY + 2;
 
-    float factx = (Width)/facteur;
-    float facty = (Height) /facteur;
+	float factx = (Width)/facteur;
+	float facty = (Height) /facteur;
 
-    /* Update point series for 20x20 Image */
-    for (int i = 0; i < imageNew->series_nb; i++) {
-    	for (int j = 0; j < imageNew->point_series[i].points_nb; j++) {
-    		imageNew->point_series[i].points[j].x = (int) floor((imageNew->point_series[i].points[j].x-minX)/factx);
-    		imageNew->point_series[i].points[j].y = (int) floor((imageNew->point_series[i].points[j].y-minY)/facty);
-    	}
-    }
+	/* Update point series for 20x20 Image */
+	for (int i = 0; i < imageNew->series_nb; i++) {
+		for (int j = 0; j < imageNew->point_series[i].points_nb; j++) {
+			imageNew->point_series[i].points[j].x = (int) floor((imageNew->point_series[i].points[j].x-minX)/factx);
+			imageNew->point_series[i].points[j].y = (int) floor((imageNew->point_series[i].points[j].y-minY)/facty);
+		}
+	}
 
-    for (int w =0; w < Width_Rescaled; w++)
-            for (int h= 0 ; h < Height_Rescaled ; h++)  bitmap28x28[w][h]  = 0xff;
+	for (int w =0; w < Width_Rescaled; w++)
+		for (int h= 0 ; h < Height_Rescaled ; h++)  bitmap28x28[w][h]  = 0xff;
 
-    for (int i = 0; i < imageNew->series_nb; i++) {
-    	for (int j = 0; j < imageNew->point_series[i].points_nb - 1; j++) {
-    		drawline(imageNew->point_series[i].points[j].x+4,
-    				 imageNew->point_series[i].points[j].y+4,
-					 imageNew->point_series[i].points[j+1].x+4,
-					 imageNew->point_series[i].points[j+1].y+4,
-					 Width_Rescaled,
-					 Height_Rescaled,
-					 (char **)bitmap28x28);
-    	}
-    }
+	for (int i = 0; i < imageNew->series_nb; i++) {
+		for (int j = 0; j < imageNew->point_series[i].points_nb - 1; j++) {
+			drawline(imageNew->point_series[i].points[j].x+4,
+					imageNew->point_series[i].points[j].y+4,
+					imageNew->point_series[i].points[j+1].x+4,
+					imageNew->point_series[i].points[j+1].y+4,
+					Width_Rescaled,
+					Height_Rescaled,
+					(char **)bitmap28x28);
+		}
+	}
 }
 
 void rotate_bitmap(char **bitmap28x28, char *bitmap28x28_rotated)
@@ -177,223 +166,346 @@ void rotate_bitmap(char **bitmap28x28, char *bitmap28x28_rotated)
 void printplot(char **bitmap28x28){
 	int Width_Rescaled=28, Height_Rescaled=28;
 
-    /* Draw rescaled image */
-    for (int j =0; j < Width_Rescaled; j++)
-    {
-        for (int i= 0 ; i < Height_Rescaled ; i++)
-        {
-        	if (bitmap28x28[i][j]==0x0)
-        	{
-        		BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-        	}
-        	else BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	/* Draw rescaled image */
+	for (int j =0; j < Width_Rescaled; j++)
+	{
+		for (int i= 0 ; i < Height_Rescaled ; i++)
+		{
+			if (bitmap28x28[i][j]==0x0)
+			{
+				BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+			}
+			else BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 
-        	BSP_LCD_FillCircle(i+10,j+10,1);
-        }
-    }
-    /* Restore back the default color */
-    BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+			BSP_LCD_FillCircle(i+10,j+10,1);
+		}
+	}
+	/* Restore back the default color */
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 }
 
 extern const void *              pSoundWav;
 
-/** UART  ***************************************/
+/** UART ***************************************/
+
+ITStatus MsgReceived = RESET;
+
+/**
+ * @brief UART MSP Initialization
+ *        This function configures the hardware resources used in this example:
+ *           - Peripheral's clock enable
+ *           - Peripheral's GPIO Configuration
+ * @param huart: UART handle pointer
+ * @retval None
+ */
+void HAL_UART_MspInit(UART_HandleTypeDef *huart)
+{
+	GPIO_InitTypeDef  GPIO_InitStruct;
+
+	/*##-1- Enable peripherals and GPIO Clocks #################################*/
+	/* Enable GPIO TX/RX clock */
+	USARTChapeau_TX_GPIO_CLK_ENABLE();
+	USARTChapeau_RX_GPIO_CLK_ENABLE();
+
+
+	/* Enable USARTx clock */
+	USARTChapeau_CLK_ENABLE();
+
+	/*##-2- Configure peripheral GPIO ##########################################*/
+	/* UART TX GPIO pin configuration  */
+	GPIO_InitStruct.Pin       = USARTChapeau_TX_PIN;
+	GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull      = GPIO_PULLUP;
+	GPIO_InitStruct.Speed     = GPIO_SPEED_HIGH;
+	GPIO_InitStruct.Alternate = USARTChapeau_TX_AF;
+
+	HAL_GPIO_Init(USARTChapeau_TX_GPIO_PORT, &GPIO_InitStruct);
+
+	/* UART RX GPIO pin configuration  */
+	GPIO_InitStruct.Pin = USARTChapeau_RX_PIN;
+	GPIO_InitStruct.Alternate = USARTChapeau_RX_AF;
+
+	HAL_GPIO_Init(USARTChapeau_RX_GPIO_PORT, &GPIO_InitStruct);
+
+	HAL_NVIC_SetPriority(USARTChapeau_IRQn, 0, 1);
+	HAL_NVIC_EnableIRQ(USARTChapeau_IRQn);
+}
+
+/**
+ * @brief UART MSP De-Initialization
+ *        This function frees the hardware resources used in this example:
+ *          - Disable the Peripheral's clock
+ *          - Revert GPIO configuration to their default state
+ * @param huart: UART handle pointer
+ * @retval None
+ */
+void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
+{
+	/*##-1- Reset peripherals ##################################################*/
+	USARTChapeau_FORCE_RESET();
+	USARTChapeau_RELEASE_RESET();
+
+	/*##-2- Disable peripherals and GPIO Clocks #################################*/
+	/* Configure USART6 Tx as alternate function  */
+	HAL_GPIO_DeInit(USARTChapeau_TX_GPIO_PORT, USARTChapeau_TX_PIN);
+	/* Configure USART6 Rx as alternate function  */
+	HAL_GPIO_DeInit(USARTChapeau_RX_GPIO_PORT, USARTChapeau_RX_PIN);
+
+	/*##-3- Disable the NVIC for UART ##########################################*/
+	HAL_NVIC_DisableIRQ(USARTChapeau_IRQn);
+}
+
+
+/* UART test :
+ *      Need a link between D0 and D1
+ */
+void initUART_Prepare_Rx(void)
+{
+	UartHandleChapeau.Instance        = USARTChapeau;
+
+	UartHandleChapeau.Init.BaudRate   = 9600;
+	UartHandleChapeau.Init.WordLength = UART_WORDLENGTH_8B;
+	UartHandleChapeau.Init.StopBits   = UART_STOPBITS_1;
+	UartHandleChapeau.Init.Parity     = UART_PARITY_NONE;
+	UartHandleChapeau.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+	UartHandleChapeau.Init.Mode       = UART_MODE_TX_RX;
+	UartHandleChapeau.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+	if(HAL_UART_DeInit(&UartHandleChapeau) != HAL_OK)
+	{
+		AVS_TRACE_ERROR("HAL_UART_DeInit failed");
+	}
+	if(HAL_UART_Init(&UartHandleChapeau) != HAL_OK)
+	{
+		AVS_TRACE_ERROR("HAL_UART_Init failed");
+	}
+
+	AVS_TRACE_INFO("Wait for message on UART (D0 pin)");
+	memset(aRxBuffer, MSG_STUF_CHAR, RXBUFFERSIZE);
+	MsgReceived = RESET;
+	if(HAL_UART_Receive_IT(&UartHandleChapeau, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK)
+	{
+		AVS_TRACE_ERROR("HAL_UART_Receive_IT failed");
+	}
+
+}
+
+void SendMsgOnUART(const uint8_t * msg)
+{
+	uint8_t size;
+
+	AVS_TRACE_INFO("Send message on UART (D1 pin): '%s'", msg);
+
+	memset(aTxBuffer, MSG_STUF_CHAR, TXBUFFERSIZE);
+	/* Copy msg into Tx buffer then add a special char at the end of msg */
+	size = (strlen(msg)>TXBUFFERSIZE - 1)? TXBUFFERSIZE - 1 : strlen(msg);
+	memcpy(aTxBuffer, msg, size);
+	aTxBuffer[size] = MSG_END_CHAR;
+	if(HAL_UART_Transmit(&UartHandleChapeau, aTxBuffer, TXBUFFERSIZE, 5000)!= HAL_OK)
+	{
+		AVS_TRACE_ERROR("HAL_UART_Transmit failed");
+	}
+}
+
 
 void service_ChapeauUart_task(void  const * argument)
 {
-    /* you can use this thread to handle UART communication */
+	/* you can use this thread to handle UART communication */
 	AVS_TRACE_INFO("start Harry Potter UART thread, are you talking to me ?");
 
-	UART_HandleTypeDef UartHandle;
-	__IO ITStatus UartReady = RESET;
-	__IO uint32_t UserButtonStatus = 0;
+	initUART_Prepare_Rx();
 
-	uint8_t aTxBuffer[] = "endoloris";
-	uint8_t aRxBuffer[50];
+	while (1) {
 
-	  HAL_Init();
+		if(MsgReceived == SET){
+			AVS_TRACE_INFO("A message has been received on UART :");
+			/* Create a null-terminated valid string from the received buffer */
+			for(int i=0; i<RXBUFFERSIZE; i++)
+				if (aRxBuffer[i] == MSG_END_CHAR)
+					aRxBuffer[i] = 0;
+			AVS_TRACE_INFO("     =>'%s'", aRxBuffer);
 
-	  BSP_LED_Init(LED1);
-	  BSP_LED_Init(LED2);
+			// Display it
+			BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
+			BSP_LCD_FillRect(200, 0, 600, 80);
+			BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+			BSP_LCD_SetBackColor(LCD_COLOR_GREEN);
+			BSP_LCD_SetFont(&Font24);
+			BSP_LCD_DisplayStringAt(210, 40, (uint8_t *)aRxBuffer, RIGHT_MODE);
 
-	  /*##-1- Configure the UART peripheral ######################################*/
-	    /* Put the USART peripheral in the Asynchronous mode (UART Mode) */
-	    /* UART configured as follows:
-	        - Word Length = 8 Bits
-	        - Stop Bit = One Stop bit
-	        - Parity = None
-	        - BaudRate = 9600 baud
-	        - Hardware flow control disabled (RTS and CTS signals) */
-	    UartHandle.Instance        = USART6;
+			// Restore text color to black (for symbol drawing)
+			BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 
-	    UartHandle.Init.BaudRate   = 9600;
-	    UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
-	    UartHandle.Init.StopBits   = UART_STOPBITS_1;
-	    UartHandle.Init.Parity     = UART_PARITY_NONE;
-	    UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-	    UartHandle.Init.Mode       = UART_MODE_TX_RX;
+			// Launch a new reception
+			initUART_Prepare_Rx();
+		}
 
-	    if(HAL_UART_DeInit(&UartHandle) != HAL_OK)
-	    {
-	    	//Error_Handler();
-	    	AVS_TRACE_ERROR("DeInit_ERROR !");
-	    }
-	    if(HAL_UART_Init(&UartHandle) != HAL_OK)
-	    {
-	    	//Error_Handler();
-	    	AVS_TRACE_ERROR("Init_ERROR !");
-	    }
 
-	    if(HAL_UART_Receive_DMA(&UartHandle, (uint8_t *)aRxBuffer, 50) != HAL_OK)
-	    {
-	    	//Error_Handler();
-	    	AVS_TRACE_ERROR("HAL_UART_Receive_DMA_ERROR !");
-	    }
 
-	    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*)aTxBuffer, 50)!= HAL_OK)
-	    {
-	        //Error_Handler();
-	    	AVS_TRACE_ERROR("HAL_UART_Transmit_DMA_ERROR !");
-	    }
-
-	    BSP_LCD_DisplayStringAt(250, 230, (uint8_t *)aRxBuffer, LEFT_MODE);
-
-	    while (UartReady != SET)
-	    {
-	    }
-
-	    BSP_LCD_DisplayStringAt(250, 230, (uint8_t *)aRxBuffer, LEFT_MODE);
-
-	    UartReady = RESET;
-    
-    while (1) {
-        /* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
-        osDelay(10);
-    }
+		osDelay(10);
+	}
 }
 /**********************************************/
 
 
 /** LEDs ***************************************/
 
+/* SPI handler declaration */
+SPI_HandleTypeDef SpiHandle;
+
+enum {
+	TRANSFER_WAIT,
+	TRANSFER_COMPLETE,
+	TRANSFER_ERROR
+};
+
 void service_ChapeauLed_task(void  const * argument)
 {
-    /* you can use this thread to handle LEDs */
+	/* you can use this thread to handle LEDs */
 
-    AVS_TRACE_INFO("start Harry Potter Led thread, and the light goes on");
+	AVS_TRACE_INFO("start Harry Potter Led thread, and the light goes on");
 
-    /* init code */
+	/* init code */
 
-    /* Set the SPI parameters */
-    SpiHandle.Instance               = SPI2;
-    SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
-    SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
-    SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
-    SpiHandle.Init.CLKPolarity       = SPI_POLARITY_HIGH;
-    SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
-    SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-    SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLE;
-    SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
-    SpiHandle.Init.CRCPolynomial     = 7;
-    SpiHandle.Init.NSS               = SPI_NSS_SOFT;
+	/* Set the SPI parameters */
+	SpiHandle.Instance               = SPI2;
+	SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+	SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
+	SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
+	SpiHandle.Init.CLKPolarity       = SPI_POLARITY_HIGH;
+	SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
+	SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+	SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLE;
+	SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
+	SpiHandle.Init.CRCPolynomial     = 7;
+	SpiHandle.Init.NSS               = SPI_NSS_SOFT;
 
-	#ifdef MASTER_BOARD
-	  SpiHandle.Init.Mode = SPI_MODE_MASTER;
-	#else
-	  SpiHandle.Init.Mode = SPI_MODE_SLAVE;
+	SpiHandle.Init.Mode = SPI_MODE_MASTER;
 
-	  /* Slave board must wait until Master Board is ready. This to guarantee the
-		 correctness of transmitted/received data */
-	  HAL_Delay(5);
-	#endif /* MASTER_BOARD */
+	HAL_SPI_MspInit(&SpiHandle);
 
-	  if(HAL_SPI_Init(&SpiHandle) != HAL_OK)
-	  {
-	    /* Initialization Error */
-	    Error_Handler();
-	  }
+	if(HAL_SPI_Init(&SpiHandle) != HAL_OK)
+	{
+		/* Initialization Error */
+		//Error_Handler();
+		AVS_TRACE_ERROR("HAL_SPI_INIT_ERROR !");
+	}
 
+	/* Buffer used for transmission */
 
-    /* Buffer used for transmission */
-    /*uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";*/
-    uint8_t aTxBuffer[] = "0 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0  FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0 FF 0 FF 0 FF 0 0 0  FF 0 FF 0 FF 0 0 0 FF FF FF FF";
+	//uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
+	uint8_t aTxBuffer[20];
 
-    /* Buffer used for reception */
-    uint8_t aRxBuffer[BUFFERSIZE];
+	aTxBuffer[0] = 0x00;
+	aTxBuffer[1] = 0x00;
+	aTxBuffer[2] = 0x00;
+	aTxBuffer[3] = 0x00;
 
-    /* transfer state */
+	aTxBuffer[4] = 0xFF;
+	aTxBuffer[5] = 0x00;
+	aTxBuffer[6] = 0x00;
+	aTxBuffer[7] = 0xFF;
 
-    __IO uint32_t wTransferState = TRANSFER_WAIT;
+	aTxBuffer[8] = 0xEF;
+	aTxBuffer[9] = 0x00;
+	aTxBuffer[10] = 0xFF;
+	aTxBuffer[11] = 0x00;
 
+	aTxBuffer[12] = 0xFF;
+	aTxBuffer[13] = 0x00;
+	aTxBuffer[14] = 0xFF;
+	aTxBuffer[15] = 0x00;
 
-    if(HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE) != HAL_OK)
-    {
-      /* Transfer error in transmission process */
-      Error_Handler();
-    }
+	aTxBuffer[16] = 0xFF;
+	aTxBuffer[17] = 0xFF;
+	aTxBuffer[18] = 0xFF;
+	aTxBuffer[19] = 0xFF;
 
-    /*##-3- Wait for the end of the transfer ###################################*/
-    /*  Before starting a new communication transfer, you must wait the callback call
-        to get the transfer complete confirmation or an error detection.
-        For simplicity reasons, this example is just waiting till the end of the
-        transfer, but application may perform other tasks while transfer operation
-        is ongoing. */
-    while (wTransferState == TRANSFER_WAIT)
-    {
-    }
+	/* transfer state */
 
-    switch(wTransferState)
-    {
-      case TRANSFER_COMPLETE :
-        /*##-4- Compare the sent and received buffers ##############################*/
-        if(Buffercmp((uint8_t*)aTxBuffer, (uint8_t*)aRxBuffer, BUFFERSIZE))
-        {
-          /* Processing Error */
-          Error_Handler();
-        }
-      break;
-      default :
-        Error_Handler();
-      break;
-    }
+	__IO uint32_t wTransferState = TRANSFER_WAIT;
 
+	uint32_t ledTxTimeout = 2000;
+	HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
+	//HAL_StatusTypeDef halStatus = HAL_SPI_Transmit_IT(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE);
 
-    while (1) {
-        /* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
-        osDelay(10);
-    }
+	switch(halStatus){
+	case HAL_OK:
+		AVS_TRACE_ERROR("LED : HAL_SPI_TransmitReceive_OK !");
+		break;
+	case HAL_ERROR:
+		AVS_TRACE_ERROR("LED : HAL_SPI_TransmitReceive_ERROR !");
+		break;
+	case HAL_BUSY:
+		AVS_TRACE_ERROR("LED : HAL_SPI_TransmitReceive_BUSY !");
+		break;
+	case HAL_TIMEOUT:
+		AVS_TRACE_ERROR("LED : HAL_SPI_TransmitReceive_TIMEOUT !");
+		break;
+	default:
+		break;
+	}
+
+	/*##-3- Wait for the end of the transfer ###################################*/
+	/*  Before starting a new communication transfer, you must wait the callback call
+	        to get the transfer complete confirmation or an error detection.
+	        For simplicity reasons, this example is just waiting till the end of the
+	        transfer, but application may perform other tasks while transfer operation
+	        is ongoing. */
+	while (wTransferState == TRANSFER_WAIT)
+	{
+		osDelay(10);
+	}
+
+	switch(wTransferState)
+	{
+	case TRANSFER_COMPLETE :
+		/*##-4- Compare the sent and received buffers ##############################*/
+		AVS_TRACE_INFO("HAL_SPI_TRANSFER_COMPLETE !");
+		break;
+	default :
+		//Error_Handler();
+		AVS_TRACE_ERROR("HAL_SPI_DEFAULT_ERROR !");
+		break;
+	}
+
+	AVS_TRACE_INFO("ICI DU LED !");
+
+	while (1) {
+		/* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
+
+		osDelay(10);
+	}
 }
-
-
 
 static void Error_Handler(void)
 {
-  /* Configure LED1 which is shared with SPI2_SCK signal */
-  BSP_LED_Init(LED1);
-  BSP_LED_Off(LED1);
-  AVS_TRACE_ERROR("Erreur Handler du LED");
-  while(1)
-  {
-    /* Toggle LED1 for error */
-    BSP_LED_Toggle(LED1);
-    HAL_Delay(1000);
-  }
+	/* Configure LED1 which is shared with SPI2_SCK signal */
+	BSP_LED_Init(LED1);
+	BSP_LED_Off(LED1);
+	AVS_TRACE_ERROR("Erreur Handler du LED");
+	while(1)
+	{
+		/* Toggle LED1 for error */
+		BSP_LED_Toggle(LED1);
+		HAL_Delay(1000);
+	}
 }
 
 static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
 {
-  while (BufferLength--)
-  {
-    if((*pBuffer1) != *pBuffer2)
-    {
-      return BufferLength;
-    }
-    pBuffer1++;
-    pBuffer2++;
-  }
+	while (BufferLength--)
+	{
+		if((*pBuffer1) != *pBuffer2)
+		{
+			return BufferLength;
+		}
+		pBuffer1++;
+		pBuffer2++;
+	}
 
-  return 0;
+	return 0;
 }
+
 
 /**********************************************/
 #define LCD_COLOR_FLOPPY           ((uint32_t) 0xFFFF0066)
@@ -401,29 +513,29 @@ static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferL
 /** User Interface *******************************/
 
 void redraw(){
-    /* Clear the LCD */
-    BSP_LCD_Clear(LCD_COLOR_WHITE);
+	/* Clear the LCD */
+	BSP_LCD_Clear(LCD_COLOR_WHITE);
 
-    //****************************************************************
-    // Top panel
-    //****************************************************************
-    
-    // "Title" box
-    BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
-    BSP_LCD_FillRect(0, 0, 200, 80);
-    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-    BSP_LCD_SetBackColor(LCD_COLOR_DARKBLUE);
-    BSP_LCD_SetFont(&Font24);
-    BSP_LCD_DisplayStringAt(10, 40, (uint8_t *)"ST Team", LEFT_MODE);
+	//****************************************************************
+	// Top panel
+	//****************************************************************
+
+	// "Title" box
+	BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
+	BSP_LCD_FillRect(0, 0, 200, 80);
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetBackColor(LCD_COLOR_DARKBLUE);
+	BSP_LCD_SetFont(&Font24);
+	BSP_LCD_DisplayStringAt(10, 40, (uint8_t *)"ST Team", LEFT_MODE);
 
 
-    // Display it
+	// Display it
 	BSP_LCD_SetTextColor(LCD_COLOR_FLOPPY);
 	BSP_LCD_FillRect(200, 0, 600, 40);
 	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetBackColor(LCD_COLOR_FLOPPY);
 	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(260, 12, (uint8_t *)"Floppy Coders", CENTER_MODE);
+	BSP_LCD_DisplayStringAt(210, 15, (uint8_t *)"Floppy Coders", RIGHT_MODE);
 
 	// Display it
 	BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
@@ -433,239 +545,235 @@ void redraw(){
 	BSP_LCD_SetFont(&Font24);
 	BSP_LCD_DisplayStringAt(210, 55, (uint8_t *)"wait msg", RIGHT_MODE);
 
-    //****************************************************************
-    // Left panel
-    //****************************************************************
+	//****************************************************************
+	// Left panel
+	//****************************************************************
 
-    // "Alexa" box
-    BSP_LCD_SetTextColor(LCD_COLOR_CYAN);
-    BSP_LCD_FillRect(0, 80, 200, 100);
-    BSP_LCD_SetBackColor(LCD_COLOR_CYAN);
-    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-    BSP_LCD_SetFont(&Font24);
-    BSP_LCD_DisplayStringAt(10, 130, (uint8_t *)"Alexa", LEFT_MODE);
-
-    // "Send" box
-    BSP_LCD_SetTextColor(LCD_COLOR_LIGHTBLUE);
-    BSP_LCD_FillRect(0, 180, 200, 100);
-    BSP_LCD_SetBackColor(LCD_COLOR_LIGHTBLUE);
-    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-    BSP_LCD_SetFont(&Font24);
-    BSP_LCD_DisplayStringAt(10, 230, (uint8_t *)"Send", LEFT_MODE);
-
-    // "LED" box
-	BSP_LCD_SetTextColor(LCD_COLOR_RED);
-	BSP_LCD_FillRect(0, 280, 200, 100);
-	BSP_LCD_SetBackColor(LCD_COLOR_RED);
+	// "Alexa" box
+	BSP_LCD_SetTextColor(LCD_COLOR_CYAN);
+	BSP_LCD_FillRect(0, 80, 200, 100);
+	BSP_LCD_SetBackColor(LCD_COLOR_CYAN);
 	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(10, 330, (uint8_t *)"MAGIE LED!", LEFT_MODE);
+	BSP_LCD_DisplayStringAt(10, 130, (uint8_t *)"Alexa", LEFT_MODE);
 
-    // "Clear" box
-    BSP_LCD_SetTextColor(LCD_COLOR_LIGHTBLUE);
-    BSP_LCD_FillRect(0, 380, 200, 100);
-    BSP_LCD_SetBackColor(LCD_COLOR_LIGHTBLUE);
-    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-    BSP_LCD_SetFont(&Font24);
-    BSP_LCD_DisplayStringAt(10, 430, (uint8_t *)"Clear", LEFT_MODE);
+	// "Send" box
+	BSP_LCD_SetTextColor(LCD_COLOR_LIGHTBLUE);
+	BSP_LCD_FillRect(0, 180, 200, 100);
+	BSP_LCD_SetBackColor(LCD_COLOR_LIGHTBLUE);
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetFont(&Font24);
+	BSP_LCD_DisplayStringAt(10, 230, (uint8_t *)"Send", LEFT_MODE);
+
+	// "Clear" box
+	BSP_LCD_SetTextColor(LCD_COLOR_LIGHTBLUE);
+	BSP_LCD_FillRect(0, 380, 200, 100);
+	BSP_LCD_SetBackColor(LCD_COLOR_LIGHTBLUE);
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetFont(&Font24);
+	BSP_LCD_DisplayStringAt(10, 430, (uint8_t *)"Clear", LEFT_MODE);
 
 
-    //****************************************************************
-    // Right panel
-    //****************************************************************
-    // ...
+	//****************************************************************
+	// Right panel
+	//****************************************************************
+	// ...
 
-    // Lines
-    BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-    BSP_LCD_DrawLine(0, 80, 800, 80);
-    BSP_LCD_DrawLine(200, 0, 200, 480);
-    BSP_LCD_DrawLine(600, 80, 600, 480);
-    BSP_LCD_DrawLine(0, 180, 200, 180);
-    BSP_LCD_DrawLine(0, 280, 200, 280);
-    BSP_LCD_DrawLine(0, 380, 200, 380);
+	// Lines
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	BSP_LCD_DrawLine(0, 80, 800, 80);
+	BSP_LCD_DrawLine(200, 0, 200, 480);
+	BSP_LCD_DrawLine(600, 80, 600, 480);
+	BSP_LCD_DrawLine(0, 180, 200, 180);
+	BSP_LCD_DrawLine(0, 280, 200, 280);
+	BSP_LCD_DrawLine(0, 380, 200, 380);
 
 }
 
 
 void service_Chapeau_task(void  const * argument)
 {
-    uint16_t x1, y1;
-    uint16_t compteur = 0;
-    uint8_t AVSrunning = 0;
-    image* imageNew;
-    uint16_t points_nb;
-    char **bitmap;
-    char *bitmap_rotated;
+	uint16_t x1, y1;
+	uint16_t compteur = 0;
+	uint8_t AVSrunning = 0;
+	int Symbole;
+	image* imageNew;
+	uint16_t points_nb;
+	char **bitmap;
+	char *bitmap_rotated;
 
-    AVS_TRACE_INFO("start Harry Potter thread, welcome in magic school !");
+	AVS_TRACE_INFO("start Harry Potter thread, welcome in magic school !");
 
-    BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
-    
-    /* Touchscreen initialization */
-    if (BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize()) == TS_ERROR) {
-        AVS_TRACE_INFO("BSP_TS_Init error\n");
-    }
-    redraw();
-    resetTouchInfos();
+	BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
 
-    int n_retry = NB_RETRY_RELEASE_DETECTION;
-    int point_series_on_going = 0;
-    int release_nb = 0;
+	/* Touchscreen initialization */
+	if (BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize()) == TS_ERROR) {
+		AVS_TRACE_INFO("BSP_TS_Init error\n");
+	}
+	redraw();
+	resetTouchInfos();
 
-    imageNew = malloc(sizeof(image));
-    if(!imageNew)
-        AVS_TRACE_ERROR("Fails to allocate image");
+	int n_retry = NB_RETRY_RELEASE_DETECTION;
+	int point_series_on_going = 0;
+	int release_nb = 0;
 
-    bitmap = (char **)malloc(28 * sizeof(char *));
-    if(!bitmap)
-        AVS_TRACE_ERROR("Fails to allocate bitmap");
+	imageNew = malloc(sizeof(image));
+	if(!imageNew)
+		AVS_TRACE_ERROR("Fails to allocate image");
 
-    for (int i=0; i<28; i++) {
-        bitmap[i] = (char *)malloc(28 * sizeof(char));
-        if(!bitmap[i])
-            AVS_TRACE_ERROR("Fails to allocate bitmap column");
-    }
+	bitmap = (char **)malloc(28 * sizeof(char *));
+	if(!bitmap)
+		AVS_TRACE_ERROR("Fails to allocate bitmap");
 
-    bitmap_rotated = (char *)malloc(28 * 28 * sizeof(char *));
-    if(!bitmap_rotated)
-        AVS_TRACE_ERROR("Fails to allocate bitmap_rotated");
+	for (int i=0; i<28; i++) {
+		bitmap[i] = (char *)malloc(28 * sizeof(char));
+		if(!bitmap[i])
+			AVS_TRACE_ERROR("Fails to allocate bitmap column");
+	}
 
-    memset(imageNew, 0, sizeof(image));
+	bitmap_rotated = (char *)malloc(28 * 28 * sizeof(char *));
+	if(!bitmap_rotated)
+		AVS_TRACE_ERROR("Fails to allocate bitmap_rotated");
 
-    BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	memset(imageNew, 0, sizeof(image));
 
-    while (1) {
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 
-        BSP_TS_GetState(&TS_State);
-        /* if no touch detected, check for release state */
-        if(!TS_State.touchDetected && point_series_on_going) {
-            if (--n_retry == 0) {
-                point_series_on_going = 0;
-                AVS_TRACE_INFO("Release", release_nb);
-                n_retry = NB_RETRY_RELEASE_DETECTION;
-            }
-        }
+	while (1) {
 
-        if(TS_State.touchDetected) {
-            n_retry = NB_RETRY_RELEASE_DETECTION;
-            /* One or dual touch have been detected          */
-    
-            /* Get X and Y position of the first touch post calibrated */
-            x1 = TS_State.touchX[0];
-            y1 = TS_State.touchY[0];
+		BSP_TS_GetState(&TS_State);
+		/* if no touch detected, check for release state */
+		if(!TS_State.touchDetected && point_series_on_going) {
+			if (--n_retry == 0) {
+				point_series_on_going = 0;
+				AVS_TRACE_INFO("Release", release_nb);
+				n_retry = NB_RETRY_RELEASE_DETECTION;
+			}
+		}
 
-            //AVS_TRACE_INFO("Touch Detected x=%d y=%d  %d\n", x1, y1, compteur);
+		if(TS_State.touchDetected) {
+			n_retry = NB_RETRY_RELEASE_DETECTION;
+			/* One or dual touch have been detected          */
 
-            if ((x1 > 0) && ( x1 < 200) && (y1 > 80) && ( y1 < 480)){
-                // Left panel
-                if ((x1 > 0) && ( x1 < 200) && (y1 > 80) && ( y1 < 180))
-                {
-                    AVS_TRACE_INFO("Touch detected : 'Alexa' button\n");
+			/* Get X and Y position of the first touch post calibrated */
+			x1 = TS_State.touchX[0];
+			y1 = TS_State.touchY[0];
 
-                    AVS_Play_Sound(hInstance, AVS_PLAYSOUND_PLAY, (void *)(uint32_t)pSoundWav, 100);
+			//AVS_TRACE_INFO("Touch Detected x=%d y=%d  %d\n", x1, y1, compteur);
 
-                    /* Starts the capture only if northing occurs on the system ( ie BUSY etc...) */
-                    if(AVS_Set_State(hInstance, AVS_STATE_START_CAPTURE) == AVS_OK){
-                        /* Capture started and button pressed */
-                        //buttonState = TRUE;
-                    }
+			if ((x1 > 0) && ( x1 < 200) && (y1 > 80) && ( y1 < 480)){
+				// Left panel
+				if ((x1 > 0) && ( x1 < 200) && (y1 > 80) && ( y1 < 180))
+				{
+					AVS_TRACE_INFO("Touch detected : 'Alexa' button\n");
 
-                    osDelay(100); // to avoid multiple detections
-                } else if ((x1 > 0) && ( x1 < 200) && (y1 > 180) && ( y1 < 280))
-                {
-                    AVS_TRACE_INFO("Touch detected : 'Send' button\n");
+					AVS_Play_Sound(hInstance, AVS_PLAYSOUND_PLAY, (void *)(uint32_t)pSoundWav, 100);
 
-                       /* Save only if point series is finishedn, users has released the touch
-                                     * before pressing the Save area */
-                       if (point_series_on_going == 1)
-                           continue;
+					/* Starts the capture only if northing occurs on the system ( ie BUSY etc...) */
+					if(AVS_Set_State(hInstance, AVS_STATE_START_CAPTURE) == AVS_OK){
+						/* Capture started and button pressed */
+						//buttonState = TRUE;
+					}
 
-                       /* Print only if at least a touch was detected */
-                       if(imageNew->series_nb) {
+					osDelay(100); // to avoid multiple detections
+				} else if ((x1 > 0) && ( x1 < 200) && (y1 > 180) && ( y1 < 280))
+				{
+					AVS_TRACE_INFO("Touch detected : 'Send' button\n");
 
-                           create_bitmap(imageNew, bitmap);
-                           rotate_bitmap(bitmap, (char *)bitmap_rotated);
-                       }
-
-                       memset(imageNew, 0, sizeof(image));
-                       point_series_on_going = 0;
-                       resetTouchInfos();
-
-                       // redraw the full UI and draw the last drawn symbol
-                       redraw();
-                       printplot(bitmap);
-
-                       osDelay(100); // to avoid multiple detections
-                } else if ((x1 > 0) && ( x1 < 200) && (y1 > 280) && ( y1 < 380))
-                {
-                    AVS_TRACE_INFO("Touch detected : 'LED' button\n");
-
-                    AVS_Play_Sound(hInstance, AVS_PLAYSOUND_ACTIVE, (void *)(uint32_t)pSoundWav, 100);
+					/* JUST FOR TEST !!!!!!!
+                                          TO MOVE IN YOUR CODE !!!!!!!!!!!!!!!
+					 */
+					SendMsgOnUART((uint8_t *)"collaporta");
 
 
-                    osDelay(100); // to avoid multiple detections
+					/* Save only if point series is finishedn, users has released the touch
+					 * before pressing the Save area */
+					if (point_series_on_going == 1)
+						continue;
 
-                } else if ((x1 > 0) && ( x1 < 200) && (y1 > 380) && ( y1 < 480))
-                {
-                    AVS_TRACE_INFO("Touch detected : 'Clear' button\n");
-                    
-                    /* Clear only if point series is finished, users has released the touch
-                                  * before pressing the Save area */
-                    if (point_series_on_going == 1)
-                        continue;
+					/* Print only if at least a touch was detected */
+					if(imageNew->series_nb) {
 
-                    redraw();
-                    BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+						create_bitmap(imageNew, bitmap);
+						rotate_bitmap(bitmap, (char *)bitmap_rotated);
+					}
 
-                    memset(imageNew, 0, sizeof(image));
-                    point_series_on_going = 0;
+					memset(imageNew, 0, sizeof(image));
 
-                    osDelay(100); // to avoid multiple detections
+					Symbole = ai_Predict(bitmap_rotated);
 
-                } 
-            } else if ((x1 > 200) && ( x1 < 600) && (y1 > 80) && ( y1 < 480))
-            {
-                //AVS_TRACE_INFO("Touch detected : 'Middle' button\n");
-                if(!point_series_on_going) {
-                    /* Create new point series */
-                    point_series_on_going = 1;
-                    imageNew->series_nb++;
-                    if (imageNew->series_nb > MAX_SERIES) {
-                        AVS_TRACE_INFO("MAX series reached, clear Image");
-                        memset(imageNew, 0, sizeof(image));
-                        point_series_on_going = 0;
-                    }
-                }
+					AVS_TRACE_INFO("%d",Symbole);
 
-                /* Get X and Y position of the first touch post calibrated */
-                imageNew->point_series[imageNew->series_nb-1].points_nb++;
-                points_nb = imageNew->point_series[imageNew->series_nb-1].points_nb;
-                imageNew->point_series[imageNew->series_nb-1].points[points_nb-1].x = x1;
-                imageNew->point_series[imageNew->series_nb-1].points[points_nb-1].y = y1;
+					point_series_on_going = 0;
+					resetTouchInfos();
 
-                /* if we reach the maximum pointpoint_series_on_goings number of a serie, create a new one */
-                if(points_nb >= MAX_POINTS) {
-                    point_series_on_going = 0;
-                    AVS_TRACE_INFO(" Max Points reached, create new serie");
-                }
+					// redraw the full UI and draw the last drawn symbol
+					redraw();
+					printplot(bitmap);
 
-                if (x1>maxX) maxX= x1;
-                if (y1>maxY) maxY= y1;
-                if (x1<minX) minX= x1;
-                if (y1<minY) minY = y1;
-                //AVS_TRACE_INFO("max x=%d y=%d\n", maxX, maxY);
-                //AVS_TRACE_INFO("min x=%d y=%d\n", minX, minY);
-                BSP_LCD_FillCircle(x1, y1, 10);
+					osDelay(100); // to avoid multiple detections
 
-            }
-            osDelay(10);
-        }else {
-            osDelay(5);
-        }
-    }
-    free(imageNew);
-    for (int i=0; i<28; i++)
-       free(bitmap[i]);
-    free(bitmap);
-    free(bitmap_rotated);
+				} else if ((x1 > 0) && ( x1 < 200) && (y1 > 380) && ( y1 < 480))
+				{
+					AVS_TRACE_INFO("Touch detected : 'Clear' button\n");
+
+					/* Clear only if point series is finished, users has released the touch
+					 * before pressing the Save area */
+					if (point_series_on_going == 1)
+						continue;
+
+					redraw();
+					BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+
+					memset(imageNew, 0, sizeof(image));
+					point_series_on_going = 0;
+
+					osDelay(100); // to avoid multiple detections
+
+				}
+			} else if ((x1 > 200) && ( x1 < 600) && (y1 > 80) && ( y1 < 480))
+			{
+				//AVS_TRACE_INFO("Touch detected : 'Middle' button\n");
+				if(!point_series_on_going) {
+					/* Create new point series */
+					point_series_on_going = 1;
+					imageNew->series_nb++;
+					if (imageNew->series_nb > MAX_SERIES) {
+						AVS_TRACE_INFO("MAX series reached, clear Image");
+						memset(imageNew, 0, sizeof(image));
+						point_series_on_going = 0;
+					}
+				}
+
+				/* Get X and Y position of the first touch post calibrated */
+				imageNew->point_series[imageNew->series_nb-1].points_nb++;
+				points_nb = imageNew->point_series[imageNew->series_nb-1].points_nb;
+				imageNew->point_series[imageNew->series_nb-1].points[points_nb-1].x = x1;
+				imageNew->point_series[imageNew->series_nb-1].points[points_nb-1].y = y1;
+
+				/* if we reach the maximum pointpoint_series_on_goings number of a serie, create a new one */
+				if(points_nb >= MAX_POINTS) {
+					point_series_on_going = 0;
+					AVS_TRACE_INFO(" Max Points reached, create new serie");
+				}
+
+				if (x1>maxX) maxX= x1;
+				if (y1>maxY) maxY= y1;
+				if (x1<minX) minX= x1;
+				if (y1<minY) minY = y1;
+				//AVS_TRACE_INFO("max x=%d y=%d\n", maxX, maxY);
+				//AVS_TRACE_INFO("min x=%d y=%d\n", minX, minY);
+				BSP_LCD_FillCircle(x1, y1, 10);
+
+			}
+			osDelay(10);
+		}else {
+			osDelay(5);
+		}
+	}
+	free(imageNew);
+	for (int i=0; i<28; i++)
+		free(bitmap[i]);
+	free(bitmap);
+	free(bitmap_rotated);
 }

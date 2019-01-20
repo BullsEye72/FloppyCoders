@@ -50,7 +50,8 @@ static uint32_t             gScreen[2];
 extern  LTDC_HandleTypeDef hltdc_discovery;
 extern  DSI_HandleTypeDef  hdsi_discovery;
 static void     console_uart(void);
-
+extern UART_HandleTypeDef UartHandleChapeau;
+extern ITStatus MsgReceived;
 
 typedef enum
 {
@@ -545,6 +546,8 @@ void platform_Init()
 }
 
 
+
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
   for(int a = 0; a < iUartWeakCB ; a++)
@@ -554,6 +557,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
       tUartWeakCB[a].cb(UartHandle);
     }
   }
+
+  if(UartHandle == &UartHandleChapeau){
+    /* Set transmission flag: transfer complete */
+    MsgReceived = SET;
+  }
+
+
 }
 
 

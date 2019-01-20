@@ -302,4 +302,18 @@ void USARTx_IRQHandler(void)
   * @}
   */
 
+extern UART_HandleTypeDef UartHandleChapeau;
+/**
+  * @brief  This function handles UART interrupt request.
+  * @param  None
+  * @retval None
+  */
+void USART6_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&UartHandleChapeau);
+}
+
+
+
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
