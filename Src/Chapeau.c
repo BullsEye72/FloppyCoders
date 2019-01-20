@@ -658,20 +658,12 @@ void redraw(){
 	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetBackColor(LCD_COLOR_DARKBLUE);
 	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(10, 40, (uint8_t *)"ST Team", LEFT_MODE);
+	BSP_LCD_DisplayStringAt(10, 40, (uint8_t *)"Floppy Coders", LEFT_MODE);
 
-
-	// Display it
-	BSP_LCD_SetTextColor(LCD_COLOR_FLOPPY);
-	BSP_LCD_FillRect(200, 0, 600, 40);
-	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	BSP_LCD_SetBackColor(LCD_COLOR_FLOPPY);
-	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(210, 15, (uint8_t *)"Floppy Coders", RIGHT_MODE);
 
 	// Display it
 	BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
-	BSP_LCD_FillRect(200, 40, 600, 40);
+	BSP_LCD_FillRect(200, 0, 600, 80);
 	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetBackColor(LCD_COLOR_GREEN);
 	BSP_LCD_SetFont(&Font24);
@@ -719,14 +711,6 @@ void redraw(){
 	BSP_LCD_DrawLine(0, 180, 200, 180);
 	BSP_LCD_DrawLine(0, 280, 200, 280);
 	BSP_LCD_DrawLine(0, 380, 200, 380);
-
-	//DEMARRAGE MON TOURNOI DES SORCIERS
-	BSP_LCD_SetTextColor(LCD_COLOR_DARKGRAY);
-	BSP_LCD_FillRect(600, 80, 200, 100);
-	BSP_LCD_SetBackColor(LCD_COLOR_DARKGRAY);
-	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(600, 130, (uint8_t *)"Lancer TDS", LEFT_MODE);
 
 }
 
