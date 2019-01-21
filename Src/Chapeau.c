@@ -326,59 +326,44 @@ void service_ChapeauUart_task(void  const * argument)
 					aRxBuffer[i] = 0;
 			AVS_TRACE_INFO("     =>'%s'", aRxBuffer);
 
-			switch((uint8_t*)aRxBuffer)
-			{
-				case "stupefix":
+
+
+			if(strstr(aRxBuffer,"stupefix"))
 				SendMsgOnUART((uint8_t *) "enervatum");
-				break;
 
-				case "expelliarmus":
+			if(strstr(aRxBuffer,"expelliarmus"))
 				SendMsgOnUART((uint8_t *) "accio");
-				break;
 
-				case "amplificatum":
+			if(strstr(aRxBuffer,"amplificatum"))
 				SendMsgOnUART((uint8_t *) "reducto");
-				break;
 
-				case "collaporta":
+			if(strstr(aRxBuffer,"collaporta"))
 				SendMsgOnUART((uint8_t *) "alohomora");
-				break;
 
-				case "nox":
+			if(strstr(aRxBuffer,"nox"))
 				SendMsgOnUART((uint8_t *) "lumos");
-				break;
 
-				case "rictusempra":
+			if(strstr(aRxBuffer,"rictusempra"))
 				SendMsgOnUART((uint8_t *) "protego");
-				break;
 
-				case "sectumsempra":
+			if(strstr(aRxBuffer,"sectumsempra"))
 				SendMsgOnUART((uint8_t *) "vulnera_sanetur");
-				break;
 
-				case "epouvantard":
+			if(strstr(aRxBuffer,"epouvantard"))
 				SendMsgOnUART((uint8_t *) "riddikulus");
-				break;
 
-				case "arania":
+			if(strstr(aRxBuffer,"arania"))
 				SendMsgOnUART((uint8_t *) "arania_exumai");
-				break;
 
-				case "mangemort":
+			if(strstr(aRxBuffer,"mangemort"))
 				SendMsgOnUART((uint8_t *) "expelliarmus");
-				break;
 
-				case "detraqueur":
+			if(strstr(aRxBuffer,"detraqueur"))
 				SendMsgOnUART((uint8_t *) "expecto_patronum");
-				break;
 
-				case "avada_kedavra":
+			if(strstr(aRxBuffer,"avada_kedavra"))
 				SendMsgOnUART((uint8_t *) "harry_potter");
-				break;
 
-				default:
-				break;
-			}
 
 			// Display it
 			BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
@@ -407,6 +392,7 @@ void service_ChapeauUart_task(void  const * argument)
 
 /* SPI handler declaration */
 SPI_HandleTypeDef SpiHandle;
+int magicState = 0;
 
 enum {
 	TRANSFER_WAIT,
@@ -512,15 +498,24 @@ void service_ChapeauLed_task(void  const * argument)
 
 	int waveDirection = 0; //0 - vers la gauche, 1 - vers la droite
 	int ledDelay = 50;
+	int colorChoice = 1;
 
 	while (1) {
 		/* loop. Don't forget to use osDelay to allow other tasks to be scedulled */
 
-		for(int cl = 0; cl < 6; cl++){
+			if(magicState==0){
+				colorChoice = 2;
+				ledDelay = 50;
+			}
+			else
+			{
+				colorChoice = 1;
+				ledDelay = 10;
+			}
 
 			if(waveDirection == 0){
 				for(int aL = 0 ; aL < 20 ; aL++){
-					getBuffer(aTxBuffer, aL, cl);
+					getBuffer(aTxBuffer, aL, colorChoice);
 
 					HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
 					osDelay(ledDelay);
@@ -529,7 +524,7 @@ void service_ChapeauLed_task(void  const * argument)
 			}
 			else{
 				for(int aL = 19 ; aL >= 0 ; aL--){
-					getBuffer(aTxBuffer, aL, cl);
+					getBuffer(aTxBuffer, aL, colorChoice);
 					HAL_StatusTypeDef halStatus = HAL_SPI_Transmit(&SpiHandle, (uint8_t*)aTxBuffer, BUFFERSIZE,ledTxTimeout);
 					osDelay(ledDelay);
 				}
@@ -540,7 +535,7 @@ void service_ChapeauLed_task(void  const * argument)
 		}
 
 
-	}
+
 }
 
 void getBuffer(uint8_t *buf, int ledChoice, int colorChoice) {
@@ -775,6 +770,8 @@ void service_Chapeau_task(void  const * argument)
 			}
 		}
 
+		magicState = 0;
+
 		if(TS_State.touchDetected) {
 			n_retry = NB_RETRY_RELEASE_DETECTION;
 			/* One or dual touch have been detected          */
@@ -782,6 +779,8 @@ void service_Chapeau_task(void  const * argument)
 			/* Get X and Y position of the first touch post calibrated */
 			x1 = TS_State.touchX[0];
 			y1 = TS_State.touchY[0];
+
+			magicState = 1;
 
 			//AVS_TRACE_INFO("Touch Detected x=%d y=%d  %d\n", x1, y1, compteur);
 
