@@ -1,7 +1,7 @@
 # 24h du code 2019 - Sujet Harry Potter, par St Microelectronics
 ## Equipe : Floppy Coders, CESI - Anthony Jaspers, Valentin Moraine, Julien Sculteur, Baptiste Malvé, Romain Bignon
 
-###Description du sujet
+### Description du sujet
 
 Programmer le chapeau magique avec son IHM incluant un écran tactile, un ruban de LEDs et des services vocaux.
 - Affronter le grand sorcier ST lors de l’épreuve finale
